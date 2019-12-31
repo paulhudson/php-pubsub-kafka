@@ -96,7 +96,11 @@ class KafkaPubSubAdapter implements PubSubAdapterInterface
                 Log::error('Caught exception: ' . $e->getMessage());
                 Log::error('On line: ' . $e->getLine());
                 Log::error('Of file: ' . $e->getFile());
-                Log::error($message);
+                Log::error($message->errstr());
+                Log::error($message->err);
+                Log::error($message->partition);
+                Log::error($message->payload);
+
 
             }
         }
