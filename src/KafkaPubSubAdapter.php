@@ -64,10 +64,10 @@ class KafkaPubSubAdapter implements PubSubAdapterInterface
         $isSubscriptionLoopActive = true;
 
         while ($isSubscriptionLoopActive) {
-             try {
 
                 $message = $this->consumer->consume(120 * 1000);
 
+            try {
                 if ($message === null) {
                     continue;
                 }
@@ -93,9 +93,9 @@ class KafkaPubSubAdapter implements PubSubAdapterInterface
                 }
             } catch (\Exception $e) {
 
-                Log::error('id: ' . $this->workerId . ' Caught exception: ' . $e->getMessage());
-                Log::error('id: ' . $this->workerId . ' On line: ' . $e->getLine());
-                Log::error('id: ' . $this->workerId . ' Of file: ' . $e->getFile());
+                Log::error('Caught exception: ' . $e->getMessage());
+                Log::error('On line: ' . $e->getLine());
+                Log::error('Of file: ' . $e->getFile());
                 Log::error($message);
 
             }
