@@ -62,30 +62,40 @@ class KafkaPubSubAdapter implements PubSubAdapterInterface
         $isSubscriptionLoopActive = true;
 
         while ($isSubscriptionLoopActive) {
-            $message = $this->consumer->consume(120 * 1000);
+             try {
 
-            if ($message === null) {
-                continue;
-            }
+                $message = $this->consumer->consume(120 * 1000);
 
-            switch ($message->err) {
-                case RD_KAFKA_RESP_ERR_NO_ERROR:
-                    $payload = Utils::unserializeMessagePayload($message->payload);
+                if ($message === null) {
+                    continue;
+                }
 
-                    if ($payload === 'unsubscribe') {
-                        $isSubscriptionLoopActive = false;
-                    } else {
-                        call_user_func($handler, $payload);
-                    }
+                switch ($message->err) {
+                    case RD_KAFKA_RESP_ERR_NO_ERROR:
+                        $payload = Utils::unserializeMessagePayload($message->payload);
 
-                    $this->consumer->commitAsync($message);
+                        if ($payload === 'unsubscribe') {
+                            $isSubscriptionLoopActive = false;
+                        } else {
+                            call_user_func($handler, $payload);
+                        }
 
-                    break;
-                case RD_KAFKA_RESP_ERR__PARTITION_EOF:
-                case RD_KAFKA_RESP_ERR__TIMED_OUT:
-                    break;
-                default:
-                    throw new \Exception($message->errstr(), $message->err);
+                        $this->consumer->commitAsync($message);
+
+                        break;
+                    case RD_KAFKA_RESP_ERR__PARTITION_EOF:
+                    case RD_KAFKA_RESP_ERR__TIMED_OUT:
+                        break;
+                    default:
+                        throw new \Exception($message->errstr(), $message->err);
+                }
+            } catch (\Exception $e) {
+
+                Log::error('id: ' . $this->workerId . ' Caught exception: ' . $e->getMessage());
+                Log::error('id: ' . $this->workerId . ' On line: ' . $e->getLine());
+                Log::error('id: ' . $this->workerId . ' Of file: ' . $e->getFile());
+                Log::error($message);
+
             }
         }
     }
