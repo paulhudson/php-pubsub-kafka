@@ -2,6 +2,8 @@
 
 namespace Superbalist\PubSub\Kafka;
 
+use Illuminate\Support\Facades\Log;
+
 use Superbalist\PubSub\PubSubAdapterInterface;
 use Superbalist\PubSub\Utils;
 
