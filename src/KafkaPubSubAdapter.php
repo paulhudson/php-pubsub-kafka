@@ -85,7 +85,7 @@ class KafkaPubSubAdapter implements PubSubAdapterInterface
                         if ($message->partition !== null) {
                             $this->consumer->commitAsync($message);
                         } else {
-                            throw new \Exception($message->errstr(), $message->err);
+                            // throw new \Exception($message->errstr(), $message->err);
                         }
 
                         break;
