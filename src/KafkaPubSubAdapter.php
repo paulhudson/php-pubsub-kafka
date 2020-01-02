@@ -82,7 +82,11 @@ class KafkaPubSubAdapter implements PubSubAdapterInterface
                             call_user_func($handler, $payload);
                         }
 
-                        $this->consumer->commitAsync($message);
+                        if ($message->partition !== null) {
+                            $this->consumer->commitAsync($message);
+                        } else {
+                            throw new \Exception($message->errstr(), $message->err);
+                        }
 
                         break;
                     case RD_KAFKA_RESP_ERR__PARTITION_EOF:
@@ -98,7 +102,7 @@ class KafkaPubSubAdapter implements PubSubAdapterInterface
                 Log::error('Of file: ' . $e->getFile());
                 Log::error($message->errstr());
                 Log::error($message->err);
-                Log::error($message->partition);
+                Log::error("Partition: " . $message->partition . " Type: " . gettype($message->partition));
                 Log::error($message->payload);
 
 
