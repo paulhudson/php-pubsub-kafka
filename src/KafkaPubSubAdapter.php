@@ -90,8 +90,8 @@ class KafkaPubSubAdapter implements PubSubAdapterInterface
 
                         break;
                     case RD_KAFKA_RESP_ERR__PARTITION_EOF:
+                        break;
                     case RD_KAFKA_RESP_ERR__TIMED_OUT:
-//                        break;
                         $isSubscriptionLoopActive = false;
                         call_user_func($handler, 'unsubscribe');
                         return;
