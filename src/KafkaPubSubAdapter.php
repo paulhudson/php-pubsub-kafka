@@ -85,13 +85,16 @@ class KafkaPubSubAdapter implements PubSubAdapterInterface
                         if ($message->partition !== null) {
                             $this->consumer->commitAsync($message);
                         } else {
-                            // throw new \Exception($message->errstr(), $message->err);
+                             throw new \Exception($message->errstr(), $message->err);
                         }
 
                         break;
                     case RD_KAFKA_RESP_ERR__PARTITION_EOF:
                     case RD_KAFKA_RESP_ERR__TIMED_OUT:
-                        break;
+//                        break;
+                        $isSubscriptionLoopActive = false;
+                        call_user_func($handler, 'unsubscribe');
+                        return;
                     default:
                         throw new \Exception($message->errstr(), $message->err);
                 }
