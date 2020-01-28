@@ -79,14 +79,14 @@ class KafkaPubSubAdapter implements PubSubAdapterInterface
                         if ($payload === 'unsubscribe') {
                             $isSubscriptionLoopActive = false;
                         } else {
-                            call_user_func($handler, $payload);
+                            call_user_func($handler, $message);
                         }
 
-                        if ($message->partition !== null) {
-                            $this->consumer->commitAsync($message);
-                        } else {
-                             throw new \Exception($message->errstr(), $message->err);
-                        }
+//                        if ($message->partition !== null) {
+//                            $this->consumer->commitAsync($message);
+//                        } else {
+//                             throw new \Exception($message->errstr(), $message->err);
+//                        }
 
                         break;
                     case RD_KAFKA_RESP_ERR__PARTITION_EOF:
