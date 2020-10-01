@@ -124,9 +124,9 @@ class KafkaPubSubAdapter implements PubSubAdapterInterface
         $topic = $this->producer->newTopic($channel);
         
         if (gettype($message) == "string") {
-            $topic->produce(RD_KAFKA_PARTITION_UA, 0, $message);
+            $topic->produce(RD_KAFKA_PARTITION_UA, RD_KAFKA_MSG_F_BLOCK, $message);
         } else {
-            $topic->produce(RD_KAFKA_PARTITION_UA, 0, Utils::serializeMessage($message));
+            $topic->produce(RD_KAFKA_PARTITION_UA, RD_KAFKA_MSG_F_BLOCK, Utils::serializeMessage($message));
         }
         
     }
