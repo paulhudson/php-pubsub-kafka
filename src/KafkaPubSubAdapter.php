@@ -2,6 +2,8 @@
 
 namespace Superbalist\PubSub\Kafka;
 
+use Illuminate\Support\Facades\Log;
+
 use Superbalist\PubSub\PubSubAdapterInterface;
 use Superbalist\PubSub\Utils;
 
@@ -62,30 +64,51 @@ class KafkaPubSubAdapter implements PubSubAdapterInterface
         $isSubscriptionLoopActive = true;
 
         while ($isSubscriptionLoopActive) {
-            $message = $this->consumer->consume(120 * 1000);
 
-            if ($message === null) {
-                continue;
-            }
+                $message = $this->consumer->consume(120 * 1000);
 
-            switch ($message->err) {
-                case RD_KAFKA_RESP_ERR_NO_ERROR:
-                    $payload = Utils::unserializeMessagePayload($message->payload);
+            try {
+                if ($message === null) {
+                    continue;
+                }
 
-                    if ($payload === 'unsubscribe') {
+                switch ($message->err) {
+                    case RD_KAFKA_RESP_ERR_NO_ERROR:
+                        $payload = Utils::unserializeMessagePayload($message->payload);
+
+                        if ($payload === 'unsubscribe') {
+                            $isSubscriptionLoopActive = false;
+                        } else {
+                            call_user_func($handler, $message);
+                        }
+
+//                        if ($message->partition !== null) {
+//                            $this->consumer->commitAsync($message);
+//                        } else {
+//                             throw new \Exception($message->errstr(), $message->err);
+//                        }
+
+                        break;
+                    case RD_KAFKA_RESP_ERR__PARTITION_EOF:
+                        break;
+                    case RD_KAFKA_RESP_ERR__TIMED_OUT:
                         $isSubscriptionLoopActive = false;
-                    } else {
-                        call_user_func($handler, $payload);
-                    }
+                        call_user_func($handler, 'unsubscribe');
+                        return;
+                    default:
+                        throw new \Exception($message->errstr(), $message->err);
+                }
+            } catch (\Exception $e) {
 
-                    $this->consumer->commitAsync($message);
+                Log::error('Caught exception: ' . $e->getMessage());
+                Log::error('On line: ' . $e->getLine());
+                Log::error('Of file: ' . $e->getFile());
+                Log::error($message->errstr());
+                Log::error($message->err);
+                Log::error("Partition: " . $message->partition . " Type: " . gettype($message->partition));
+                Log::error($message->payload);
 
-                    break;
-                case RD_KAFKA_RESP_ERR__PARTITION_EOF:
-                case RD_KAFKA_RESP_ERR__TIMED_OUT:
-                    break;
-                default:
-                    throw new \Exception($message->errstr(), $message->err);
+
             }
         }
     }
@@ -96,10 +119,16 @@ class KafkaPubSubAdapter implements PubSubAdapterInterface
      * @param string $channel
      * @param mixed $message
      */
-    public function publish($channel, $message)
+     public function publish($channel, $message)
     {
         $topic = $this->producer->newTopic($channel);
-        $topic->produce(RD_KAFKA_PARTITION_UA, 0, Utils::serializeMessage($message));
+        
+        if (gettype($message) == "string") {
+            $topic->produce(RD_KAFKA_PARTITION_UA, RD_KAFKA_MSG_F_BLOCK, $message);
+        } else {
+            $topic->produce(RD_KAFKA_PARTITION_UA, RD_KAFKA_MSG_F_BLOCK, Utils::serializeMessage($message));
+        }
+        
     }
 
     /**
